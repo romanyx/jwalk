@@ -26,7 +26,7 @@ func TestParse(t *testing.T) {
 						},
 						field{
 							name:  "key2",
-							value: nil,
+							value: value{[]byte("null")},
 						},
 						field{
 							name:  "key3",
@@ -102,10 +102,10 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestObjectIteratorMarshalJSON(t *testing.T) {
+func TestObjectWalkerMarshalJSON(t *testing.T) {
 	tests := []struct {
 		name    string
-		obj     ObjectIterator
+		obj     ObjectWalker
 		wantErr bool
 		expect  []byte
 	}{
