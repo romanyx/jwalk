@@ -4,7 +4,7 @@
 
 # jwalk
 
-Jwalk is builded un top of easyjson/jlexer, and allows to easely unmarshal any JSON input with arbitrary key names by walking through it.
+Jwalk is built on top of easyjson/jlexer, and allows to easily unmarshal any JSON input with arbitrary key names by walking through it.
 
 ## Usage
 
