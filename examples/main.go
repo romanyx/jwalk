@@ -28,27 +28,31 @@ func main() {
 
 	switch v := i.(type) {
 	case jwalk.ObjectWalker:
-		v.Walk(func(key string, value interface{}) {
+		v.Walk(func(key string, value interface{}) error {
 			fmt.Println(key + ":")
 			switch v := value.(type) {
 			case jwalk.ObjectsWalker:
-				v.Walk(func(obj jwalk.ObjectWalker) {
+				v.Walk(func(obj jwalk.ObjectWalker) error {
 					fmt.Println("\t-")
-					obj.Walk(func(key string, value interface{}) {
+					obj.Walk(func(key string, value interface{}) error {
 						if v, ok := value.(jwalk.Value); ok {
 							fmt.Println("\t", key+":", v.Interface())
 						}
+						return nil
 					})
+					return nil
 				})
 			case jwalk.Value:
 				fmt.Println("\t", v.Interface())
 			case jwalk.ObjectWalker:
-				v.Walk(func(key string, value interface{}) {
+				v.Walk(func(key string, value interface{}) error {
 					if v, ok := value.(jwalk.Value); ok {
 						fmt.Println("\t", key+":", v.Interface())
 					}
+					return nil
 				})
 			}
+			return nil
 		})
 	}
 }

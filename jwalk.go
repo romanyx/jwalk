@@ -10,7 +10,7 @@ import (
 
 // ObjectWalker iterates through JSON object fields.
 type ObjectWalker interface {
-	Walk(func(name string, value interface{}))
+	Walk(func(name string, value interface{}) error) error
 	json.Marshaler
 }
 
@@ -25,10 +25,14 @@ type field struct {
 	value interface{}
 }
 
-func (o object) Walk(fn func(name string, value interface{})) {
+func (o object) Walk(fn func(name string, value interface{}) error) error {
 	for _, f := range o.fields {
-		fn(f.name, f.value)
+		if err := fn(f.name, f.value); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (o object) MarshalJSON() ([]byte, error) {
@@ -67,16 +71,20 @@ func (o object) marshal(w *jwriter.Writer) error {
 
 // ObjectsWalker iterates through array of JSON objects.
 type ObjectsWalker interface {
-	Walk(func(obj ObjectWalker))
+	Walk(func(obj ObjectWalker) error) error
 	json.Marshaler
 }
 
 type objects []ObjectWalker
 
-func (o objects) Walk(fn func(obj ObjectWalker)) {
+func (o objects) Walk(fn func(obj ObjectWalker) error) error {
 	for _, obj := range o {
-		fn(obj)
+		if err := fn(obj); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (o objects) MarshalJSON() ([]byte, error) {
