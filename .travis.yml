@@ -1,12 +1,8 @@
 language: go
-
 go:
-  - stable
-  - master
-
-matrix:
-  allow_failures:
-    - go: master
-
+  - 1.11
 script:
   - go test -v --race ./...
+install: true
+env:
+  - GO111MODULE=on
