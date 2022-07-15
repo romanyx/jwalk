@@ -10,7 +10,7 @@ import (
 
 // ObjectWalker iterates through JSON object fields.
 type ObjectWalker interface {
-	Walk(func(name string, value interface{}) error) error
+	Walk(func(name string, value interface{}, start, end int) error) error
 	json.Marshaler
 }
 
@@ -23,11 +23,13 @@ type object struct {
 type field struct {
 	name  string
 	value interface{}
+	start int
+	end   int
 }
 
-func (o object) Walk(fn func(name string, value interface{}) error) error {
+func (o object) Walk(fn func(name string, value interface{}, start, end int) error) error {
 	for _, f := range o.fields {
-		if err := fn(f.name, f.value); err != nil {
+		if err := fn(f.name, f.value, f.start, f.end); err != nil {
 			return err
 		}
 	}
@@ -117,41 +119,46 @@ func (o objects) marshal(w *jwriter.Writer) error {
 // Parse parses the json data.
 func Parse(data []byte) (interface{}, error) {
 	l := jlexer.Lexer{Data: data}
-	return parse(&l)
+	return parse(&l, 0)
 }
 
-func parse(l *jlexer.Lexer) (interface{}, error) {
+func parse(l *jlexer.Lexer, offset int) (interface{}, error) {
 	switch {
 	case l.IsDelim('{'):
-		return getObject(l)
+		return getObject(l, offset)
 	case l.IsDelim('['):
-		return getArray(l)
+		return getArray(l, offset+l.GetPos()-1)
 	default:
 		return getValue(l)
 	}
 }
 
-func getObject(l *jlexer.Lexer) (ObjectWalker, error) {
+func getObject(l *jlexer.Lexer, offset int) (ObjectWalker, error) {
 	var obj object
 	l.Delim('{')
 	for !l.IsDelim('}') {
 		key := l.UnsafeString()
 		field := field{name: key}
 		l.WantColon()
+		start := offset + l.GetPos() + 1
 		if l.IsNull() {
 			field.value = value{[]byte("null")}
+			field.start = start
+			field.end = start + 3
 			obj.fields = append(obj.fields, field)
 			l.Skip()
 			l.WantComma()
 			continue
 		}
 
-		val, err := parse(l)
+		val, err := parse(l, offset)
 		if err != nil {
 			return obj, errors.Wrap(err, "get object")
 		}
 
 		field.value = val
+		field.start = start
+		field.end = offset + l.GetPos()
 		obj.fields = append(obj.fields, field)
 		l.WantComma()
 	}
@@ -160,7 +167,7 @@ func getObject(l *jlexer.Lexer) (ObjectWalker, error) {
 	return obj, l.Error()
 }
 
-func getArray(l *jlexer.Lexer) (interface{}, error) {
+func getArray(l *jlexer.Lexer, offset int) (interface{}, error) {
 	raw := l.Raw()
 	rc := make([]byte, len(raw))
 	copy(rc, raw)
@@ -171,7 +178,7 @@ func getArray(l *jlexer.Lexer) (interface{}, error) {
 	case ll.IsDelim('{'):
 		objs := make(objects, 0)
 		for !ll.IsDelim(']') {
-			obj, err := getObject(&ll)
+			obj, err := getObject(&ll, offset)
 			if err != nil {
 				return objs, errors.Wrap(err, "array of objects")
 			}
