@@ -23,14 +23,20 @@ func TestParse(t *testing.T) {
 						field{
 							name:  "key",
 							value: value{[]byte("\"value\"")},
+							start: 7,
+							end:   14,
 						},
 						field{
 							name:  "key2",
 							value: value{[]byte("null")},
+							start: 22,
+							end:   25,
 						},
 						field{
 							name:  "key3",
 							value: value{[]byte("[1,2]")},
+							start: 34,
+							end:   39,
 						},
 					},
 				},
@@ -49,9 +55,13 @@ func TestParse(t *testing.T) {
 									field{
 										name:  "key",
 										value: value{[]byte("\"value\"")},
+										start: 14,
+										end:   21,
 									},
 								},
 							},
+							start: 7,
+							end:   22,
 						},
 					},
 				},
@@ -59,7 +69,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name: "objects key",
-			data: []byte(`{"key":[{"key":"value"}]}`),
+			data: []byte(`{"key":[{"key2":"value","key3":[{"key4":"value2"}]}]}`),
 			expect: interface{}(
 				object{
 					fields: []field{
@@ -69,12 +79,33 @@ func TestParse(t *testing.T) {
 								object{
 									fields: []field{
 										field{
-											name:  "key",
+											name:  "key2",
 											value: value{[]byte("\"value\"")},
+											start: 16,
+											end:   23,
+										},
+										field{
+											name: "key3",
+											value: objects{
+												object{
+													[]field{
+														field{
+															name:  "key4",
+															value: value{[]byte("\"value2\"")},
+															start: 40,
+															end:   48,
+														},
+													},
+												},
+											},
+											start: 31,
+											end:   50,
 										},
 									},
 								},
 							},
+							start: 7,
+							end:   52,
 						},
 					},
 				},
