@@ -39,13 +39,13 @@ func main() {
 
 	switch v := i.(type) {
 	case jwalk.ObjectWalker:
-		v.Walk(func(key string, value interface{}) error {
+		v.Walk(func(key string, value interface{}, start, end int) error {
 			fmt.Println(key + ":")
 			switch v := value.(type) {
 			case jwalk.ObjectsWalker:
 				v.Walk(func(obj jwalk.ObjectWalker) error {
 					fmt.Println("\t-")
-					obj.Walk(func(key string, value interface{}) error {
+					obj.Walk(func(key string, value interface{}, start, end int) error {
 						if v, ok := value.(jwalk.Value); ok {
 							fmt.Println("\t", key+":", v.Interface())
 						}
@@ -56,7 +56,7 @@ func main() {
 			case jwalk.Value:
 				fmt.Println("\t", v.Interface())
 			case jwalk.ObjectWalker:
-				v.Walk(func(key string, value interface{}) error {
+				v.Walk(func(key string, value interface{}, start, end int) error {
 					if v, ok := value.(jwalk.Value); ok {
 						fmt.Println("\t", key+":", v.Interface())
 					}
